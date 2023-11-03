@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Text Accuracy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container py-5">
+        <div class="d-flex">
+            <textarea class="form-control me-3" id="text1"></textarea>
+            <textarea class="form-control ms-3" id="text2"></textarea>
+        </div>
+        <div class="flex-center">
+            <button class="btn btn-dark w-100 mt-3" onClick="goCompare()">Compare</button>
+        </div>
+        <div class="d-flex">
+            <h3 class="text-center fs-5 w-100 mt-3" id="output"></h3>
+        </div>
+    </div>
+</body>
+<script>
+    function calculateSimilarity(str1, str2) {
+        // Get the lengths of the input strings
+        const len1 = str1.length;
+        const len2 = str2.length;
+        // Determine the maximum length between the two strings
+        const maxLength = Math.max(len1, len2);
+
+        // If both strings are empty, they are 100% similar
+        if (maxLength === 0) {
+            return 100;
+        }
+
+        // Initialize a 2D array for Levenshtein distance calculation. Fill with empty values for now
+        const editDistance = new Array(len1 + 1).fill(null).map(() => new Array(len2 + 1).fill(null));
+
+        // Initialize the first row and first column of the 2D array
+        for (let i = 0; i <= len1; i++) {
+            editDistance[i][0] = i; // Represents the number of insertions needed to match an empty string
+        }
+
+        for (let j = 0; j <= len2; j++) {
+            editDistance[0][j] = j; // Represents the number of deletions needed to match an empty string
+        }
+
+        // Fill the 2D array
+        for (let i = 1; i <= len1; i++) {
+            for (let j = 1; j <= len2; j++) {
+                // Calculate the cost (0 if characters are equal, 1 if not)
+                const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+                // Update the cell with the minimum of three possible operations (deletion, insertion, substitution)
+                editDistance[i][j] = Math.min(
+                    editDistance[i - 1][j] + 1, // Deletion
+                    editDistance[i][j - 1] + 1, // Insertion
+                    editDistance[i - 1][j - 1] + cost // Substitution
+                );
+            }
+        }
+
+        // Calculate similarity as 1 - (edit distance / maximum length) and convert to percentage
+        const similarity = 1 - editDistance[len1][len2] / maxLength;
+        return Math.round(similarity * 100);
+    }
+
+    function removeExcessWhitespace(text) {
+        return text.replace(/\s+/g, ' ').trim();
+    }
+
+    // Run comparison
+    function goCompare() {
+        let string1 = document.getElementById('text1').value;
+        const string1Formatted = removeExcessWhitespace(string1);
+
+        // string1 = string1Formatted
+        // document.getElementById('text1').value = string1Formatted;
+
+        const string2 = document.getElementById('text2').value;
+        const similarityPercentage = calculateSimilarity(string1Formatted, string2);
+        document.getElementById("output").innerText = `Similarity: ${similarityPercentage}%`
+    }
+</script>
+</html>
